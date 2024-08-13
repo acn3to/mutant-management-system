@@ -3,9 +3,7 @@ package com.codecrafters.devs.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record MutantDTO(
-        Long id,
-
+public record CreateMutantDTO(
         @NotBlank
         String name,
 
@@ -13,9 +11,5 @@ public record MutantDTO(
         String power,
 
         @NotNull
-        Integer age,
-
-        Integer enemiesDefeated,
-
-        Boolean isCurrentlyInSchool
+        Integer age
 ) {}
