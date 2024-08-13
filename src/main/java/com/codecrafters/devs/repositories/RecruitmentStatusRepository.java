@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface RecruitmentStatusRepository extends JpaRepository<RecruitmentStatus, Long> {
-    List<RecruitmentStatus> findAllByMutantId(Long mutantId);
+    List<RecruitmentStatus> findAllByIsEligibleForEspadaTrue();
 }

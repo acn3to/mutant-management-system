@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface EntryExitLogRepository extends JpaRepository<EntryExitLog, Long> {
+    // TODO: Implement all those methods
     List<EntryExitLog> findByMutantId(Long mutantId);
     List<EntryExitLog> findByEntryTimeAfter(LocalDateTime dateTime);
     List<EntryExitLog> findByExitTimeIsNull();
