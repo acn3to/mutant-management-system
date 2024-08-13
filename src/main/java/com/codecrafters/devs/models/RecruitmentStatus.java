@@ -1,9 +1,7 @@
 package com.codecrafters.devs.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "recruitment_statuses")
@@ -21,7 +19,10 @@ public class RecruitmentStatus {
     private Mutant mutant;
 
     @Column(nullable = false)
-    private boolean isEligibleForRecruitment;
+    private boolean isEligibleForEspada;
+
+    @Column(nullable = false)
+    private int enemiesDefeated;
 
     @Column(nullable = false)
     private int aliensDefeated;

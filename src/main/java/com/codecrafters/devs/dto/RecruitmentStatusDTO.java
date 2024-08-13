@@ -10,7 +10,10 @@ public record RecruitmentStatusDTO(
         Long mutantId,
 
         @NotNull
-        Boolean isEligibleForRecruitment,
+        Boolean isEligibleForEspada,
+
+        @NotNull
+        Integer enemiesDefeated,
 
         @NotNull
         Integer aliensDefeated,
