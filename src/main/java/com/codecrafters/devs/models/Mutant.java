@@ -30,7 +30,7 @@ public class Mutant {
     @Column(nullable = false)
     private int enemiesDefeated;
 
-    @Column(nullable = false, columnDefinition = "boolean default false")
+    @Column(nullable = false)
     private boolean isCurrentlyInSchool;
 
     @OneToMany(mappedBy = "mutant", cascade = CascadeType.ALL)
