@@ -14,8 +14,7 @@ public class MutantMapper {
                 mutant.getPower(),
                 mutant.getAge(),
                 mutant.getEnemiesDefeated(),
-                mutant.isCurrentlyInSchool(),
-                null
+                mutant.isCurrentlyInSchool()
         );
     }
 
