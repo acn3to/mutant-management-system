@@ -6,7 +6,7 @@ import com.codecrafters.devs.models.Mutant;
 import com.codecrafters.devs.models.RecruitmentStatus;
 import com.codecrafters.devs.repositories.MutantRepository;
 import com.codecrafters.devs.repositories.RecruitmentStatusRepository;
-import org.springframework.beans.BeanUtils;
+import com.codecrafters.devs.helpers.RecruitmentStatusHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,40 +36,54 @@ public class RecruitmentStatusService {
         return recruitmentStatusRepository.findById(id).map(recruitmentStatusMapper::toDTO);
     }
 
-    public RecruitmentStatusDTO createRecruitmentStatus(Long mutantId) {
+    public RecruitmentStatusDTO createRecruitmentStatus(Long mutantId, int enemiesDefeated) {
         Mutant mutant = mutantRepository.findById(mutantId).orElseThrow(() -> new IllegalArgumentException("Mutant not found"));
 
-        RecruitmentStatus recruitmentStatus = new RecruitmentStatus();
-        recruitmentStatus.setMutant(mutant);
-        recruitmentStatus.setEnemiesDefeated(mutant.getEnemiesDefeated());
+        RecruitmentStatus recruitmentStatus = RecruitmentStatusHelper.calculateRecruitmentStatus(mutant, enemiesDefeated);
 
-        int aliensDefeated = (int) Math.round(mutant.getEnemiesDefeated() * (26.8 / 100));
-        int demonsDefeated = (int) Math.round(mutant.getEnemiesDefeated() * (43.2 / 100));
-
-        recruitmentStatus.setAliensDefeated(aliensDefeated);
-        recruitmentStatus.setDemonsDefeated(demonsDefeated);
-        recruitmentStatus.setEligibleForEspada(aliensDefeated > 20);
-
+        mutantRepository.save(mutant);
         RecruitmentStatus savedStatus = recruitmentStatusRepository.save(recruitmentStatus);
+
         return recruitmentStatusMapper.toDTO(savedStatus);
     }
 
     public RecruitmentStatusDTO updateRecruitmentStatus(Long id, RecruitmentStatusDTO recruitmentStatusDTO) {
         return recruitmentStatusRepository.findById(id).map(existingStatus -> {
-            BeanUtils.copyProperties(recruitmentStatusDTO, existingStatus, "id", "mutant");
+            if (recruitmentStatusDTO.enemiesDefeated() != null) {
+                int newEnemiesDefeated = recruitmentStatusDTO.enemiesDefeated();
 
-            int enemiesDefeated = existingStatus.getAliensDefeated() + existingStatus.getDemonsDefeated();
-            existingStatus.setEnemiesDefeated(enemiesDefeated);
+                Mutant mutant = existingStatus.getMutant();
 
-            RecruitmentStatus updatedStatus = recruitmentStatusRepository.save(existingStatus);
-            return recruitmentStatusMapper.toDTO(updatedStatus);
+                mutant.setEnemiesDefeated(newEnemiesDefeated);
+
+                RecruitmentStatus updatedStatus = RecruitmentStatusHelper.calculateRecruitmentStatus(mutant, newEnemiesDefeated);
+
+                existingStatus.setEnemiesDefeated(updatedStatus.getEnemiesDefeated());
+                existingStatus.setAliensDefeated(updatedStatus.getAliensDefeated());
+                existingStatus.setDemonsDefeated(updatedStatus.getDemonsDefeated());
+                existingStatus.setEligibleForEspada(updatedStatus.isEligibleForEspada());
+
+                mutantRepository.save(mutant);
+                RecruitmentStatus savedStatus = recruitmentStatusRepository.save(existingStatus);
+
+                return recruitmentStatusMapper.toDTO(savedStatus);
+            } else {
+                throw new IllegalArgumentException("Only 'enemiesDefeated' can be updated.");
+            }
         }).orElseThrow(() -> new IllegalArgumentException("RecruitmentStatus not found"));
     }
 
     public void deleteRecruitmentStatus(Long id) {
-        if (!recruitmentStatusRepository.existsById(id)) {
-            throw new IllegalArgumentException("RecruitmentStatus not found");
-        }
+        RecruitmentStatus status = recruitmentStatusRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("RecruitmentStatus not found"));
+
+        Mutant mutant = status.getMutant();
+
+        mutant.setEnemiesDefeated(0);
+        mutant.setRecruitmentStatus(null);
+
+        mutantRepository.save(mutant);
+
         recruitmentStatusRepository.deleteById(id);
     }
 }
