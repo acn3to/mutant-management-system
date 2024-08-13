@@ -1,6 +1,8 @@
 package com.codecrafters.devs.services;
 
+import com.codecrafters.devs.dto.MutantDTO;
 import com.codecrafters.devs.dto.RecruitmentStatusDTO;
+import com.codecrafters.devs.mappers.MutantMapper;
 import com.codecrafters.devs.mappers.RecruitmentStatusMapper;
 import com.codecrafters.devs.models.Mutant;
 import com.codecrafters.devs.models.RecruitmentStatus;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RecruitmentStatusService {
@@ -19,12 +22,14 @@ public class RecruitmentStatusService {
     private final RecruitmentStatusRepository recruitmentStatusRepository;
     private final MutantRepository mutantRepository;
     private final RecruitmentStatusMapper recruitmentStatusMapper;
+    private final MutantMapper mutantMapper;
 
     @Autowired
-    public RecruitmentStatusService(RecruitmentStatusRepository recruitmentStatusRepository, MutantRepository mutantRepository, RecruitmentStatusMapper recruitmentStatusMapper) {
+    public RecruitmentStatusService(RecruitmentStatusRepository recruitmentStatusRepository, MutantRepository mutantRepository, RecruitmentStatusMapper recruitmentStatusMapper, MutantMapper mutantMapper) {
         this.recruitmentStatusRepository = recruitmentStatusRepository;
         this.mutantRepository = mutantRepository;
         this.recruitmentStatusMapper = recruitmentStatusMapper;
+        this.mutantMapper = mutantMapper;
     }
 
     public List<RecruitmentStatusDTO> getAllRecruitmentStatuses() {
@@ -34,6 +39,14 @@ public class RecruitmentStatusService {
 
     public Optional<RecruitmentStatusDTO> getRecruitmentStatusById(Long id) {
         return recruitmentStatusRepository.findById(id).map(recruitmentStatusMapper::toDTO);
+    }
+
+    public List<MutantDTO> getEligibleMutantsForEspada() {
+        List<RecruitmentStatus> eligibleStatuses = recruitmentStatusRepository.findAllByIsEligibleForEspadaTrue();
+
+        List<Long> eligibleMutantIds = eligibleStatuses.stream().map(status -> status.getMutant().getId()).collect(Collectors.toList());
+
+        return mutantRepository.findAllById(eligibleMutantIds).stream().map(mutantMapper::toDTO).collect(Collectors.toList());
     }
 
     public RecruitmentStatusDTO createRecruitmentStatus(Long mutantId, int enemiesDefeated) {
@@ -47,6 +60,7 @@ public class RecruitmentStatusService {
         return recruitmentStatusMapper.toDTO(savedStatus);
     }
 
+    //TODO: Refactor this
     public RecruitmentStatusDTO updateRecruitmentStatus(Long id, RecruitmentStatusDTO recruitmentStatusDTO) {
         return recruitmentStatusRepository.findById(id).map(existingStatus -> {
             if (recruitmentStatusDTO.enemiesDefeated() != null) {
