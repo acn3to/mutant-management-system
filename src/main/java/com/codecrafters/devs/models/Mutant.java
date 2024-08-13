@@ -30,10 +30,7 @@ public class Mutant {
     @Column(nullable = false)
     private int enemiesDefeated;
 
-    @Column(nullable = false)
-    private String password;
-
-    @Column(nullable = false, columnDefinition = "boolean default true")
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isCurrentlyInSchool;
 
     @OneToMany(mappedBy = "mutant", cascade = CascadeType.ALL)
