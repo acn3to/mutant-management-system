@@ -1,10 +1,7 @@
 package com.codecrafters.devs.controllers;
 
-import com.codecrafters.devs.dto.CreateMutantDTO;
 import com.codecrafters.devs.dto.MutantDTO;
 import com.codecrafters.devs.dto.MutantPatchDTO;
-import com.codecrafters.devs.mappers.MutantMapper;
-import com.codecrafters.devs.models.Mutant;
 import com.codecrafters.devs.services.MutantService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +19,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/mutants")
 public class MutantController {
 
+    @Autowired
     private final MutantService mutantService;
-    private final MutantMapper mutantMapper;
 
     @Autowired
-    public MutantController(MutantService mutantService, MutantMapper mutantMapper) {
+    public MutantController(MutantService mutantService) {
         this.mutantService = mutantService;
-        this.mutantMapper = mutantMapper;
     }
 
     @GetMapping
@@ -55,9 +51,17 @@ public class MutantController {
     @GetMapping("/in-school")
     public ResponseEntity<List<MutantDTO>> getAllMutantsInSchool() {
         try {
-            List<Mutant> mutantsInSchool = mutantService.getAllMutantsInSchool();
-            List<MutantDTO> mutantDTOs = mutantsInSchool.stream()
-                    .map(mutantMapper::toDTO)
+            List<MutantDTO> mutantDTOs = mutantService.getAllMutantsInSchool().stream()
+                    .map(mutant -> new MutantDTO(
+                            mutant.getId(),
+                            mutant.getName(),
+                            mutant.getPower(),
+                            mutant.getAge(),
+                            mutant.getEnemiesDefeated(),
+                            mutant.isCurrentlyInSchool(),
+                            mutant.getUsername(),
+                            mutant.getPassword()
+                    ))
                     .collect(Collectors.toList());
             return ResponseEntity.ok(mutantDTOs);
         } catch (Exception e) {
@@ -70,28 +74,8 @@ public class MutantController {
         try {
             int count = mutantService.getCountOfMutantsInSchool();
             Map<String, Integer> response = new HashMap<>();
-            response.put("mutants_on_school", count);
+            response.put("mutants_in_school", count);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<MutantDTO> createMutant(@RequestBody @Valid CreateMutantDTO createMutantDTO) {
-        try {
-            MutantDTO mutantDTO = new MutantDTO(
-                    null,
-                    createMutantDTO.name(),
-                    createMutantDTO.power(),
-                    createMutantDTO.age(),
-                    0,
-                    true
-            );
-            MutantDTO createdMutant = mutantService.createMutant(mutantDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdMutant);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -100,22 +84,13 @@ public class MutantController {
     @PatchMapping("/{id}")
     public ResponseEntity<MutantDTO> updateMutant(@PathVariable Long id, @RequestBody @Valid MutantPatchDTO mutantPatchDTO) {
         try {
-            MutantDTO mutantDTO = new MutantDTO(
-                    null,
-                    mutantPatchDTO.name(),
-                    mutantPatchDTO.power(),
-                    mutantPatchDTO.age(),
-                    null,
-                    null
-            );
-            return mutantService.updateMutant(id, mutantDTO)
-                    .map(ResponseEntity::ok)
+            Optional<MutantDTO> updatedMutant = mutantService.updateMutant(id, mutantPatchDTO);
+            return updatedMutant.map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMutant(@PathVariable Long id) {

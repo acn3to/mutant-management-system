@@ -5,17 +5,11 @@ import jakarta.validation.constraints.NotNull;
 
 public record MutantDTO(
         Long id,
-
-        @NotBlank
-        String name,
-
-        @NotBlank
-        String power,
-
-        @NotNull
-        Integer age,
-
-        Integer enemiesDefeated,
-
-        Boolean isCurrentlyInSchool
+        @NotBlank String name,
+        @NotBlank String power,
+        @NotNull Integer age,
+        @NotNull Integer enemiesDefeated,
+        @NotNull Boolean isCurrentlyInSchool,
+        @NotBlank String username,
+        @NotBlank String password
 ) {}

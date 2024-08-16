@@ -1,6 +1,8 @@
 package com.codecrafters.devs.services;
 
+import com.codecrafters.devs.dto.CreateMutantDTO;
 import com.codecrafters.devs.dto.MutantDTO;
+import com.codecrafters.devs.dto.MutantPatchDTO;
 import com.codecrafters.devs.mappers.MutantMapper;
 import com.codecrafters.devs.models.Mutant;
 import com.codecrafters.devs.repositories.MutantRepository;
@@ -13,7 +15,6 @@ import java.util.Optional;
 @Service
 public class MutantService {
 
-    //TODO: Remove this mapper injection
     private final MutantRepository mutantRepository;
     private final MutantMapper mutantMapper;
 
@@ -40,24 +41,16 @@ public class MutantService {
         return mutantRepository.countByIsCurrentlyInSchoolTrue();
     }
 
-    public MutantDTO createMutant(MutantDTO mutantDTO) {
-        Mutant mutant = mutantMapper.toEntity(mutantDTO);
+    public MutantDTO createMutant(CreateMutantDTO createMutantDTO) {
+        Mutant mutant = mutantMapper.toEntity(createMutantDTO);
+
         Mutant savedMutant = mutantRepository.save(mutant);
         return mutantMapper.toDTO(savedMutant);
     }
 
-    public Optional<MutantDTO> updateMutant(Long id, MutantDTO mutantDTO) {
+    public Optional<MutantDTO> updateMutant(Long id, MutantPatchDTO mutantPatchDTO) {
         return mutantRepository.findById(id).map(existingMutant -> {
-            if (mutantDTO.name() != null) {
-                existingMutant.setName(mutantDTO.name());
-            }
-            if (mutantDTO.power() != null) {
-                existingMutant.setPower(mutantDTO.power());
-            }
-            if (mutantDTO.age() != null) {
-                existingMutant.setAge(mutantDTO.age());
-            }
-
+            mutantMapper.updateEntityFromPatchDTO(existingMutant, mutantPatchDTO);
             Mutant updatedMutant = mutantRepository.save(existingMutant);
             return mutantMapper.toDTO(updatedMutant);
         });
